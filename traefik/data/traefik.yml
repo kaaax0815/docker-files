@@ -1,0 +1,55 @@
+log:
+  level: INFO
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: ":443"
+    http:
+      middlewares:
+        - compress@file
+        - hsts@file
+      tls:
+        certresolver: letsencrypt
+    http3: {}
+  traefik:
+    address: ":8080"
+
+api:
+  dashboard: true
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: REPLACE_ME
+      storage: acme.json
+#      httpChallenge:
+#        entryPoint: web
+      dnsChallenge:
+        provider: cloudflare
+
+providers:
+  docker:
+    watch: true
+    network: traefik
+    exposedByDefault: false
+  file:
+    filename: traefik_dynamic.yml
+
+serversTransport:
+  insecureSkipVerify: true
+
+metrics:
+  prometheus: {}
+
+tracing:
+  otlp:
+    grpc:
+      endpoint: otel-collector:4317
+      insecure: true

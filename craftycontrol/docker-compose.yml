@@ -1,0 +1,53 @@
+services:
+  crafty:
+    container_name: crafty_container
+    image: registry.gitlab.com/crafty-controller/crafty-4:latest
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Berlin
+    ports:
+      - "25565:25565" # MC SERV PORT RANGE
+    volumes:
+      - /docker/craftycontrol/data/backups:/crafty/backups
+      - /docker/craftycontrol/data/logs:/crafty/logs
+      - /docker/craftycontrol/data/servers:/crafty/servers
+      - /docker/craftycontrol/data/config:/crafty/app/config
+      - /docker/craftycontrol/data/import:/crafty/import
+    networks:
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.crafty.tls=true
+      - traefik.http.routers.crafty.tls.certresolver=letsencrypt
+      - traefik.http.routers.crafty.rule=Host(`REPLACE_ME`)
+      - traefik.http.routers.crafty.entrypoints=websecure
+      - traefik.http.routers.crafty.service=crafty
+      - traefik.http.routers.crafty.middlewares=sslheader@docker
+      - traefik.http.services.crafty.loadbalancer.server.port=8443
+      - traefik.http.services.crafty.loadbalancer.server.scheme=https
+      - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https
+
+  bluemap:
+    image: ghcr.io/bluemap-minecraft/bluemap:latest
+    restart: always
+    command: -r -u -w
+    volumes:
+      - '/docker/craftycontrol/data/bluemap/config:/app/config'
+      # Include here the path to your worlds
+      - '/docker/craftycontrol/data/bluemap/data:/app/data'
+      - '/docker/craftycontrol/data/bluemap/web:/app/web'
+    networks:
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.bluemap.tls=true
+      - traefik.http.routers.bluemap.tls.certresolver=letsencrypt
+      - traefik.http.routers.bluemap.rule=Host(`REPLACE_ME`)
+      - traefik.http.routers.bluemap.entrypoints=websecure
+      - traefik.http.routers.bluemap.service=bluemap
+      - traefik.http.services.bluemap.loadbalancer.server.port=8100
+      - traefik.http.routers.bluemap.middlewares=minecraft@file
+
+networks:
+  traefik:
+    external: true

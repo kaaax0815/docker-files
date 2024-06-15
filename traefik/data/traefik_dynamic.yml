@@ -1,0 +1,53 @@
+http:
+  middlewares:
+    services:
+      basicAuth:
+        users:
+          - "REPLACE_ME"
+    minecraft:
+      basicAuth:
+        users:
+          - "REPLACE_ME"
+    compress:
+      compress: {}
+    hsts:
+      headers:
+        stsSeconds: 2592000
+    towebsite:
+      redirectRegex:
+        regex: .*
+        replacement: REPLACE_ME
+        permanent: false
+  routers:
+    api:
+      rule: Host(`REPLACE_ME`)
+      entrypoints:
+        - websecure
+      middlewares:
+        - services
+      service: api@internal
+      tls:
+        certresolver: letsencrypt
+    catchall:
+      rule: HostRegexp(`^(?:.+\.)?REPLACE_ME$`)
+      entrypoints:
+        - websecure
+      middlewares:
+        - towebsite
+      service: noop@internal
+      priority: 1
+      tls:
+        certresolver: letsencrypt
+        domains:
+          - main: "REPLACE_ME"
+            sans:
+              - "*.REPLACE_ME"
+
+tls:
+  options:
+    default:
+      cipherSuites:
+        - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+      sniStrict: true

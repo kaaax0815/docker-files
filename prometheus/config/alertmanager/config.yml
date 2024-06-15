@@ -1,0 +1,5 @@
+route:
+  receiver: 'smtp'
+
+receivers:
+  - name: 'smtp'

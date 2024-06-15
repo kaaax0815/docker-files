@@ -1,0 +1,25 @@
+services:
+  lldap:
+    image: lldap/lldap:stable
+    restart: unless-stopped
+    volumes:
+      - "/docker/ldap/data/lldap:/data"
+    env_file:
+      - lldap.env
+    networks:
+      - lldap
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.lldap.tls=true
+      - traefik.http.routers.lldap.tls.certresolver=letsencrypt
+      - traefik.http.routers.lldap.rule=Host(`REPLACE_ME`)
+      - traefik.http.routers.lldap.entrypoints=websecure
+      - traefik.http.routers.lldap.service=lldap
+      - traefik.http.services.lldap.loadbalancer.server.port=17170
+
+networks:
+  traefik:
+    external: true
+  lldap:
+    external: true
